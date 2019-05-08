@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-const hbSource = "prebid-server"
+const supplyId = "FGMrCMMc"
 const strVersion = "1.0.0"
 
 func NewSharethroughBidder(endpoint string) *SharethroughAdapter {

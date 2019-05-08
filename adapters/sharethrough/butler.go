@@ -71,7 +71,7 @@ func generateHBUri(baseUrl string, params hbUriParams, app *openrtb.App) string 
 	}
 
 	v.Set("hbVersion", version)
-	v.Set("hbSource", hbSource)
+	v.Set("supplyId", supplyId)
 	v.Set("strVersion", strVersion)
 
 	return baseUrl + "?" + v.Encode()
