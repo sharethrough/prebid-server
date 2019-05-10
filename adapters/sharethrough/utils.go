@@ -52,8 +52,7 @@ func getAdMarkup(strResp openrtb_ext.ExtImpSharethroughResponse, params *hbUriPa
 		       }
 		     })()
 		   </script>
-	`
-
+		`
 	}
 
 	tmpl, err := template.New("sfpjs").Parse(tmplBody)
@@ -76,6 +75,9 @@ func getAdMarkup(strResp openrtb_ext.ExtImpSharethroughResponse, params *hbUriPa
 		template.JS(strRespId),
 		b64EncodedJson,
 	})
+	if err != nil {
+		return "", err
+	}
 
 	return templatedBuf.String(), nil
 }

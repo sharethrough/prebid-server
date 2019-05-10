@@ -38,7 +38,6 @@ func butlerToOpenRTBResponse(btlrReq *adapters.RequestData, strResp openrtb_ext.
 
 	adm, admErr := getAdMarkup(strResp, btlrParams)
 	if admErr != nil {
-		// TODO: is this the right way to invoke an error?
 		errs = append(errs, &errortypes.BadServerResponse{Message: admErr.Error()})
 	}
 
