@@ -28,6 +28,11 @@ func butlerToOpenRTBResponse(btlrReq *adapters.RequestData, strResp openrtb_ext.
 
 	bidResponse.Currency = "USD"
 	typedBid := &adapters.TypedBid{BidType: openrtb_ext.BidTypeNative}
+
+	if len(strResp.Creatives) == 0 {
+		errs = append(errs, &errortypes.BadInput{Message: "No creative provided"})
+		return nil, errs
+	}
 	creative := strResp.Creatives[0]
 
 	btlrParams, parseHBUriErr := parseHBUri(btlrReq.Uri)
@@ -60,7 +65,7 @@ func butlerToOpenRTBResponse(btlrReq *adapters.RequestData, strResp openrtb_ext.
 	return bidResponse, errs
 }
 
-func generateHBUri(baseUrl string, params hbUriParams, app *openrtb.App) string {
+func (s SharethroughAdapter) generateHBUri(baseUrl string, params hbUriParams, app *openrtb.App) string {
 	v := url.Values{}
 	v.Set("placement_key", params.Pkey)
 	v.Set("bidId", params.BidID)

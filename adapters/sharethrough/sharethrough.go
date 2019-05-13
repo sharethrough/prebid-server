@@ -51,7 +51,7 @@ func (s SharethroughAdapter) MakeRequests(request *openrtb.BidRequest) ([]*adapt
 
 		potentialRequests = append(potentialRequests, &adapters.RequestData{
 			Method: "POST",
-			Uri: generateHBUri(s.URI, hbUriParams{
+			Uri: s.generateHBUri(s.URI, hbUriParams{
 				Pkey:               pKey,
 				BidID:              imp.ID,
 				ConsentRequired:    gdprApplies(request),
