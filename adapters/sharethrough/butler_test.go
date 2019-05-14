@@ -6,9 +6,105 @@ import (
 	"github.com/prebid/prebid-server/adapters"
 	"github.com/prebid/prebid-server/errortypes"
 	"github.com/prebid/prebid-server/openrtb_ext"
+	"net/http"
 	"strings"
 	"testing"
 )
+
+type MockUtil struct {
+	mockCanAutoPlayVideo  func() bool
+	mockGdprApplies       func() bool
+	mockGdprConsentString func() string
+	mockGenerateHBUri     func() string
+	mockGetPlacementSize  func() (uint64, uint64)
+	UtilityInterface
+}
+
+func (m MockUtil) canAutoPlayVideo(userAgent string) bool {
+	return m.mockCanAutoPlayVideo()
+}
+
+func (m MockUtil) gdprApplies(request *openrtb.BidRequest) bool {
+	return m.mockGdprApplies()
+}
+
+func (m MockUtil) gdprConsentString(bidRequest *openrtb.BidRequest) string {
+	return m.mockGdprConsentString()
+}
+
+func (m MockUtil) generateHBUri(baseUrl string, params StrAdSeverParams, app *openrtb.App) string {
+	return m.mockGenerateHBUri()
+}
+
+func (m MockUtil) getPlacementSize(formats []openrtb.Format) (height uint64, width uint64) {
+	return m.mockGetPlacementSize()
+}
+
+func assertRequestDataEquals(t *testing.T, testName string, expected *adapters.RequestData, actual *adapters.RequestData) {
+	t.Logf("Test case: %s\n", testName)
+	if expected.Method != actual.Method {
+		t.Errorf("Method mismatch: expected %s got %s\n", expected.Method, actual.Method)
+	}
+	if expected.Uri != actual.Uri {
+		t.Errorf("Uri mismatch: expected %s got %s\n", expected.Uri, actual.Uri)
+	}
+	if len(expected.Body) != len(actual.Body) {
+		t.Errorf("Body mismatch: expected %s got %s\n", expected.Body, actual.Body)
+	}
+	for headerIndex, expectedHeader := range expected.Headers {
+		if expectedHeader[0] != actual.Headers[headerIndex][0] {
+			t.Errorf("Header %s mismatch: expected %s got %s\n", headerIndex, expectedHeader[0], actual.Headers[headerIndex][0])
+		}
+	}
+}
+
+func TestSuccessRequestFromOpenRTB(t *testing.T) {
+	tests := map[string]struct {
+		inputImp openrtb.Imp
+		inputReq *openrtb.BidRequest
+		expected *adapters.RequestData
+	}{
+		"Generates the correct AdServer request from Imp": {
+			inputImp: openrtb.Imp{
+				ID:  "abc",
+				Ext: []byte(`{"pkey": "pkey", "iframe": true, "iframeSize": [10, 20]}`),
+				Banner: &openrtb.Banner{
+					Format: []openrtb.Format{{H: 30, W: 40}},
+				},
+			},
+			inputReq: &openrtb.BidRequest{
+				App: &openrtb.App{Ext: []byte(`{}`)},
+				Device: &openrtb.Device{
+					UA: "Android Chome/60",
+				},
+			},
+			expected: &adapters.RequestData{
+				Method: "POST",
+				Uri:    "http://abc.com",
+				Body:   nil,
+				Headers: http.Header{
+					"Content-Type": []string{"text/plain;charset=utf-8"},
+					"Accept":       []string{"application/json"},
+				},
+			},
+		},
+	}
+
+	mockUriHelper := MockStrUriHelper{
+		mockBuildUri: func() string {
+			return "http://abc.com"
+		},
+	}
+
+	adServer := StrOpenRTBTranslator{UriHelper: mockUriHelper, Util: Util{}}
+	for testName, test := range tests {
+		outputSuccess, outputError := adServer.requestFromOpenRTB(test.inputImp, test.inputReq)
+		assertRequestDataEquals(t, testName, test.expected, outputSuccess)
+		if outputError != nil {
+			t.Errorf("Expected no errors, got %s\n", outputError)
+		}
+	}
+}
 
 func assertBidderResponseEquals(t *testing.T, testName string, expected adapters.BidderResponse, actual adapters.BidderResponse) {
 	t.Logf("Test case: %s\n", testName)
@@ -50,7 +146,7 @@ func assertBidderResponseEquals(t *testing.T, testName string, expected adapters
 	}
 }
 
-func TestSuccessButlerToOpenRTBResponse(t *testing.T) {
+func TestSuccessResponseToOpenRTB(t *testing.T) {
 	tests := map[string]struct {
 		inputButlerReq  *adapters.RequestData
 		inputStrResp    openrtb_ext.ExtImpSharethroughResponse
@@ -93,8 +189,9 @@ func TestSuccessButlerToOpenRTBResponse(t *testing.T) {
 		},
 	}
 
+	adServer := StrOpenRTBTranslator{Util: Util{}, UriHelper: StrUriHelper{}}
 	for testName, test := range tests {
-		outputSuccess, outputErrors := butlerToOpenRTBResponse(test.inputButlerReq, test.inputStrResp)
+		outputSuccess, outputErrors := adServer.responseToOpenRTB(test.inputStrResp, test.inputButlerReq)
 		assertBidderResponseEquals(t, testName, *test.expectedSuccess, *outputSuccess)
 		if len(outputErrors) != len(test.expectedErrors) {
 			t.Errorf("Expected %d errors, got %d\n", len(test.expectedErrors), len(outputErrors))
@@ -102,7 +199,7 @@ func TestSuccessButlerToOpenRTBResponse(t *testing.T) {
 	}
 }
 
-func TestFailButlerToOpenRTBResponse(t *testing.T) {
+func TestFailResponseToOpenRTB(t *testing.T) {
 	tests := map[string]struct {
 		inputButlerReq  *adapters.RequestData
 		inputStrResp    openrtb_ext.ExtImpSharethroughResponse
@@ -133,9 +230,10 @@ func TestFailButlerToOpenRTBResponse(t *testing.T) {
 		},
 	}
 
+	adServer := StrOpenRTBTranslator{UriHelper: StrUriHelper{}}
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
-		outputSuccess, outputErrors := butlerToOpenRTBResponse(test.inputButlerReq, test.inputStrResp)
+		outputSuccess, outputErrors := adServer.responseToOpenRTB(test.inputStrResp, test.inputButlerReq)
 
 		if test.expectedSuccess != outputSuccess {
 			t.Errorf("Expected result %+v, got %+v\n", test.expectedSuccess, outputSuccess)
@@ -156,16 +254,14 @@ func TestFailButlerToOpenRTBResponse(t *testing.T) {
 	}
 }
 
-func TestGenerateHBUri(t *testing.T) {
+func TestBuildUri(t *testing.T) {
 	tests := map[string]struct {
-		inputUrl    string
-		inputParams hbUriParams
+		inputParams StrAdSeverParams
 		inputApp    *openrtb.App
 		expected    []string
 	}{
 		"Generates expected URL, appending all params": {
-			inputUrl: "http://abc.com",
-			inputParams: hbUriParams{
+			inputParams: StrAdSeverParams{
 				Pkey:               "pkey",
 				BidID:              "bid",
 				ConsentRequired:    true,
@@ -192,8 +288,7 @@ func TestGenerateHBUri(t *testing.T) {
 			},
 		},
 		"Sets version to unknown if version not found": {
-			inputUrl:    "http://abc.com",
-			inputParams: hbUriParams{},
+			inputParams: StrAdSeverParams{},
 			inputApp:    &openrtb.App{Ext: []byte(`{}`)},
 			expected: []string{
 				"hbVersion=unknown",
@@ -201,11 +296,10 @@ func TestGenerateHBUri(t *testing.T) {
 		},
 	}
 
-	adapter := NewSharethroughBidder("http://abc.com")
-
+	uriHelper := StrUriHelper{BaseURI: "http://abc.com"}
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
-		output := adapter.generateHBUri(test.inputUrl, test.inputParams, test.inputApp)
+		output := uriHelper.buildUri(test.inputParams, test.inputApp)
 
 		for _, uriParam := range test.expected {
 			if !strings.Contains(output, uriParam) {
@@ -215,7 +309,7 @@ func TestGenerateHBUri(t *testing.T) {
 	}
 }
 
-func assertHbUriParamsEquals(t *testing.T, testName string, expected *hbUriParams, actual *hbUriParams) {
+func assertStrAdServerParamsEquals(t *testing.T, testName string, expected *StrAdSeverParams, actual *StrAdSeverParams) {
 	t.Logf("Test case: %s\n", testName)
 	if expected.Pkey != actual.Pkey {
 		t.Errorf("Expected Pkey to be %s, got %s\n", expected.Pkey, actual.Pkey)
@@ -240,14 +334,14 @@ func assertHbUriParamsEquals(t *testing.T, testName string, expected *hbUriParam
 	}
 }
 
-func TestSuccessParseHBUri(t *testing.T) {
+func TestSuccessParseUri(t *testing.T) {
 	tests := map[string]struct {
 		input           string
-		expectedSuccess *hbUriParams
+		expectedSuccess *StrAdSeverParams
 	}{
 		"Decodes URI successfully": {
 			input: "http://abc.com?placement_key=pkey&bidId=bid&consent_required=true&consent_string=consent&instant_play_capable=true&stayInIframe=false&height=20&width=30&hbVersion=1&supplyId=FGMrCMMc&strVersion=1.0.0",
-			expectedSuccess: &hbUriParams{
+			expectedSuccess: &StrAdSeverParams{
 				Pkey:            "pkey",
 				BidID:           "bid",
 				Iframe:          false,
@@ -259,18 +353,19 @@ func TestSuccessParseHBUri(t *testing.T) {
 		},
 	}
 
+	uriHelper := StrUriHelper{}
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
-		output, actualError := parseHBUri(test.input)
+		output, actualError := uriHelper.parseUri(test.input)
 
-		assertHbUriParamsEquals(t, testName, test.expectedSuccess, output)
+		assertStrAdServerParamsEquals(t, testName, test.expectedSuccess, output)
 		if actualError != nil {
 			t.Errorf("Expected no errors, got %s\n", actualError)
 		}
 	}
 }
 
-func TestFailParseHBUri(t *testing.T) {
+func TestFailParseUri(t *testing.T) {
 	tests := map[string]struct {
 		input         string
 		expectedError string
@@ -289,9 +384,10 @@ func TestFailParseHBUri(t *testing.T) {
 		},
 	}
 
+	uriHelper := StrUriHelper{}
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
-		output, actualError := parseHBUri(test.input)
+		output, actualError := uriHelper.parseUri(test.input)
 
 		if output != nil {
 			t.Errorf("Expected return value nil, got %+v\n", output)

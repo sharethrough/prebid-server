@@ -10,13 +10,13 @@ import (
 func TestGetAdMarkup(t *testing.T) {
 	tests := map[string]struct {
 		inputResponse   openrtb_ext.ExtImpSharethroughResponse
-		inputParams     *hbUriParams
+		inputParams     *StrAdSeverParams
 		expectedSuccess []string
 		expectedError   error
 	}{
 		"Sets template variables": {
 			inputResponse: openrtb_ext.ExtImpSharethroughResponse{BidID: "bid", AdServerRequestID: "arid"},
-			inputParams:   &hbUriParams{Pkey: "pkey"},
+			inputParams:   &StrAdSeverParams{Pkey: "pkey"},
 			expectedSuccess: []string{
 				`<img src="//b.sharethrough.com/butler?type=s2s-win&arid=arid" />`,
 				`<div data-str-native-key="pkey" data-stx-response-name="str_response_bid"></div>`,
@@ -26,7 +26,7 @@ func TestGetAdMarkup(t *testing.T) {
 		},
 		"Includes sfp.js without iFrame busting logic if iFrame param is true": {
 			inputResponse: openrtb_ext.ExtImpSharethroughResponse{BidID: "bid", AdServerRequestID: "arid"},
-			inputParams:   &hbUriParams{Pkey: "pkey", Iframe: true},
+			inputParams:   &StrAdSeverParams{Pkey: "pkey", Iframe: true},
 			expectedSuccess: []string{
 				`<script src="//native.sharethrough.com/assets/sfp.js"></script>`,
 			},
@@ -34,7 +34,7 @@ func TestGetAdMarkup(t *testing.T) {
 		},
 		"Includes sfp.js with iFrame busting logic if iFrame param is false": {
 			inputResponse: openrtb_ext.ExtImpSharethroughResponse{BidID: "bid", AdServerRequestID: "arid"},
-			inputParams:   &hbUriParams{Pkey: "pkey", Iframe: false},
+			inputParams:   &StrAdSeverParams{Pkey: "pkey", Iframe: false},
 			expectedSuccess: []string{
 				`<script src="//native.sharethrough.com/assets/sfp-set-targeting.js"></script>`,
 			},
@@ -42,7 +42,7 @@ func TestGetAdMarkup(t *testing.T) {
 		},
 		"Includes sfp.js with iFrame busting logic if iFrame param is not provided": {
 			inputResponse: openrtb_ext.ExtImpSharethroughResponse{BidID: "bid", AdServerRequestID: "arid"},
-			inputParams:   &hbUriParams{Pkey: "pkey"},
+			inputParams:   &StrAdSeverParams{Pkey: "pkey"},
 			expectedSuccess: []string{
 				`<script src="//native.sharethrough.com/assets/sfp-set-targeting.js"></script>`,
 			},
@@ -50,10 +50,11 @@ func TestGetAdMarkup(t *testing.T) {
 		},
 	}
 
+	util := Util{}
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
 
-		outputSuccess, outputError := getAdMarkup(test.inputResponse, test.inputParams)
+		outputSuccess, outputError := util.getAdMarkup(test.inputResponse, test.inputParams)
 		for _, markup := range test.expectedSuccess {
 			if !strings.Contains(outputSuccess, markup) {
 				t.Errorf("Expected Ad Markup to contain: %s, got %s\n", markup, outputSuccess)
@@ -88,10 +89,11 @@ func TestGetPlacementSize(t *testing.T) {
 		},
 	}
 
+	util := Util{}
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
 
-		outputHeight, outputWidth := getPlacementSize(test.input)
+		outputHeight, outputWidth := util.getPlacementSize(test.input)
 		if outputHeight != test.expectedHeight {
 			t.Errorf("Expected Height: %d, got %d\n", test.expectedHeight, outputHeight)
 		}
@@ -144,7 +146,7 @@ func TestCanAutoPlayVideo(t *testing.T) {
 		}
 	}
 
-	runUserAgentTests(tests, canAutoPlayVideo, t)
+	runUserAgentTests(tests, Util{}.canAutoPlayVideo, t)
 }
 
 func TestIsAndroid(t *testing.T) {
@@ -163,7 +165,7 @@ func TestIsAndroid(t *testing.T) {
 		},
 	}
 
-	runUserAgentTests(tests, isAndroid, t)
+	runUserAgentTests(tests, Util{}.isAndroid, t)
 }
 
 func TestIsiOS(t *testing.T) {
@@ -191,7 +193,7 @@ func TestIsiOS(t *testing.T) {
 		},
 	}
 
-	runUserAgentTests(tests, isiOS, t)
+	runUserAgentTests(tests, Util{}.isiOS, t)
 }
 
 func TestIsAtMinChromeVersion(t *testing.T) {
@@ -214,7 +216,7 @@ func TestIsAtMinChromeVersion(t *testing.T) {
 		},
 	}
 
-	runUserAgentTests(tests, isAtMinChromeVersion, t)
+	runUserAgentTests(tests, Util{}.isAtMinChromeVersion, t)
 }
 
 func TestIsAtMinChromeIosVersion(t *testing.T) {
@@ -237,7 +239,7 @@ func TestIsAtMinChromeIosVersion(t *testing.T) {
 		},
 	}
 
-	runUserAgentTests(tests, isAtMinChromeIosVersion, t)
+	runUserAgentTests(tests, Util{}.isAtMinChromeIosVersion, t)
 }
 
 func TestIsAtMinSafariVersion(t *testing.T) {
@@ -260,7 +262,7 @@ func TestIsAtMinSafariVersion(t *testing.T) {
 		},
 	}
 
-	runUserAgentTests(tests, isAtMinSafariVersion, t)
+	runUserAgentTests(tests, Util{}.isAtMinSafariVersion, t)
 }
 
 func TestGdprApplies(t *testing.T) {
@@ -305,10 +307,11 @@ func TestGdprApplies(t *testing.T) {
 		},
 	}
 
+	util := Util{}
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
 
-		output := gdprApplies(test.input)
+		output := util.gdprApplies(test.input)
 		if output != test.expected {
 			t.Errorf("Expected: %t, got %t\n", test.expected, output)
 		}
@@ -357,10 +360,11 @@ func TestGdprConsentString(t *testing.T) {
 		},
 	}
 
+	util := Util{}
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
 
-		output := gdprConsentString(test.input)
+		output := util.gdprConsentString(test.input)
 		if output != test.expected {
 			t.Errorf("Expected: %s, got %s\n", test.expected, output)
 		}
