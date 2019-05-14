@@ -7,23 +7,6 @@ import (
 	"testing"
 )
 
-type SharethroughAdapterInterface interface {
-	generateHBUri(string, hbUriParams, *openrtb.App) string
-}
-
-type MockSharethroughAdapter struct {
-	SharethroughAdapterInterface
-	*SharethroughAdapter
-}
-
-func (s MockSharethroughAdapter) generateHBUri(baseUrl string, params hbUriParams, app *openrtb.App) string {
-	return "http://ppp.com?placement_key=pkey"
-}
-
-//func (s MockSharethroughAdapter) MakeRequests(request *openrtb.BidRequest) ([]*adapters.RequestData, []error) {
-//	return s.adapter.MakeRequests(request)
-//}
-
 func assertRequestDataEquals(t *testing.T, testName string, expected []*adapters.RequestData, actual []*adapters.RequestData) {
 	t.Logf("Test case: %s\n", testName)
 
@@ -84,7 +67,7 @@ func TestSuccessMakeRequests(t *testing.T) {
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
 
-		adapter := &MockSharethroughAdapter{nil, &SharethroughAdapter{URI: "http://abc.com"}}
+		adapter := &SharethroughAdapter{URI: "http://abc.com", util: &Util{}}
 		output, actualErrors := adapter.MakeRequests(test.input)
 
 		assertRequestDataEquals(t, testName, test.expected, output)
