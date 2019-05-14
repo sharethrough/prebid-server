@@ -201,11 +201,10 @@ func TestGenerateHBUri(t *testing.T) {
 		},
 	}
 
-	adapter := NewSharethroughBidder("http://abc.com")
-
+	util := &Util{}
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
-		output := adapter.generateHBUri(test.inputUrl, test.inputParams, test.inputApp)
+		output := util.generateHBUri(test.inputUrl, test.inputParams, test.inputApp)
 
 		for _, uriParam := range test.expected {
 			if !strings.Contains(output, uriParam) {

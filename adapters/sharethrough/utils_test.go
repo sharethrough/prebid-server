@@ -2,68 +2,8 @@ package sharethrough
 
 import (
 	"github.com/mxmCherry/openrtb"
-	"github.com/prebid/prebid-server/openrtb_ext"
-	"strings"
 	"testing"
 )
-
-func TestGetAdMarkup(t *testing.T) {
-	tests := map[string]struct {
-		inputResponse   openrtb_ext.ExtImpSharethroughResponse
-		inputParams     *hbUriParams
-		expectedSuccess []string
-		expectedError   error
-	}{
-		"Sets template variables": {
-			inputResponse: openrtb_ext.ExtImpSharethroughResponse{BidID: "bid", AdServerRequestID: "arid"},
-			inputParams:   &hbUriParams{Pkey: "pkey"},
-			expectedSuccess: []string{
-				`<img src="//b.sharethrough.com/butler?type=s2s-win&arid=arid" />`,
-				`<div data-str-native-key="pkey" data-stx-response-name="str_response_bid"></div>`,
-				`<script>var str_response_bid = "eyJhZHNlcnZlclJlcXVlc3RJZCI6ImFyaWQiLCJiaWRJZCI6ImJpZCIsImNvb2tpZVN5bmNVcmxzIjpudWxsLCJjcmVhdGl2ZXMiOm51bGwsInBsYWNlbWVudCI6eyJhbGxvd19pbnN0YW50X3BsYXkiOmZhbHNlLCJhcnRpY2xlc19iZWZvcmVfZmlyc3RfYWQiOjAsImFydGljbGVzX2JldHdlZW5fYWRzIjowLCJsYXlvdXQiOiIiLCJtZXRhZGF0YSI6bnVsbCwicGxhY2VtZW50QXR0cmlidXRlcyI6eyJhZF9zZXJ2ZXJfa2V5IjoiIiwiYWRfc2VydmVyX3BhdGgiOiIiLCJhbGxvd19keW5hbWljX2Nyb3BwaW5nIjpmYWxzZSwiYXBwX3RoaXJkX3BhcnR5X3BhcnRuZXJzIjpudWxsLCJjdXN0b21fY2FyZF9jc3MiOiIiLCJkZnBfcGF0aCI6IiIsImRpcmVjdF9zZWxsX3Byb21vdGVkX2J5X3RleHQiOiIiLCJkb21haW4iOiIiLCJlbmFibGVfbGlua19yZWRpcmVjdGlvbiI6ZmFsc2UsImZlYXR1cmVkX2NvbnRlbnQiOm51bGwsIm1heF9oZWFkbGluZV9sZW5ndGgiOjAsIm11bHRpX2FkX3BsYWNlbWVudCI6ZmFsc2UsInByb21vdGVkX2J5X3RleHQiOiIiLCJwdWJsaXNoZXJfa2V5IjoiIiwicmVuZGVyaW5nX3BpeGVsX29mZnNldCI6MCwic2FmZV9mcmFtZV9zaXplIjpudWxsLCJzaXRlX2tleSI6IiIsInN0cl9vcHRfb3V0X3VybCI6IiIsInRlbXBsYXRlIjoiIiwidGhpcmRfcGFydHlfcGFydG5lcnMiOm51bGx9LCJzdGF0dXMiOiIifSwic3R4VXNlcklkIjoiIn0="</script>`,
-			},
-			expectedError: nil,
-		},
-		"Includes sfp.js without iFrame busting logic if iFrame param is true": {
-			inputResponse: openrtb_ext.ExtImpSharethroughResponse{BidID: "bid", AdServerRequestID: "arid"},
-			inputParams:   &hbUriParams{Pkey: "pkey", Iframe: true},
-			expectedSuccess: []string{
-				`<script src="//native.sharethrough.com/assets/sfp.js"></script>`,
-			},
-			expectedError: nil,
-		},
-		"Includes sfp.js with iFrame busting logic if iFrame param is false": {
-			inputResponse: openrtb_ext.ExtImpSharethroughResponse{BidID: "bid", AdServerRequestID: "arid"},
-			inputParams:   &hbUriParams{Pkey: "pkey", Iframe: false},
-			expectedSuccess: []string{
-				`<script src="//native.sharethrough.com/assets/sfp-set-targeting.js"></script>`,
-			},
-			expectedError: nil,
-		},
-		"Includes sfp.js with iFrame busting logic if iFrame param is not provided": {
-			inputResponse: openrtb_ext.ExtImpSharethroughResponse{BidID: "bid", AdServerRequestID: "arid"},
-			inputParams:   &hbUriParams{Pkey: "pkey"},
-			expectedSuccess: []string{
-				`<script src="//native.sharethrough.com/assets/sfp-set-targeting.js"></script>`,
-			},
-			expectedError: nil,
-		},
-	}
-
-	for testName, test := range tests {
-		t.Logf("Test case: %s\n", testName)
-
-		outputSuccess, outputError := getAdMarkup(test.inputResponse, test.inputParams)
-		for _, markup := range test.expectedSuccess {
-			if !strings.Contains(outputSuccess, markup) {
-				t.Errorf("Expected Ad Markup to contain: %s, got %s\n", markup, outputSuccess)
-			}
-		}
-		if outputError != test.expectedError {
-			t.Errorf("Expected Error to be: %s, got %s\n", test.expectedError, outputError)
-		}
-	}
-}
 
 func TestGetPlacementSize(t *testing.T) {
 	tests := map[string]struct {
@@ -88,10 +28,11 @@ func TestGetPlacementSize(t *testing.T) {
 		},
 	}
 
+	u := &Util{}
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
 
-		outputHeight, outputWidth := getPlacementSize(test.input)
+		outputHeight, outputWidth := u.getPlacementSize(test.input)
 		if outputHeight != test.expectedHeight {
 			t.Errorf("Expected Height: %d, got %d\n", test.expectedHeight, outputHeight)
 		}
@@ -144,7 +85,8 @@ func TestCanAutoPlayVideo(t *testing.T) {
 		}
 	}
 
-	runUserAgentTests(tests, canAutoPlayVideo, t)
+	u := &Util{}
+	runUserAgentTests(tests, u.canAutoPlayVideo, t)
 }
 
 func TestIsAndroid(t *testing.T) {
@@ -163,7 +105,8 @@ func TestIsAndroid(t *testing.T) {
 		},
 	}
 
-	runUserAgentTests(tests, isAndroid, t)
+	u := &Util{}
+	runUserAgentTests(tests, u.isAndroid, t)
 }
 
 func TestIsiOS(t *testing.T) {
@@ -191,7 +134,8 @@ func TestIsiOS(t *testing.T) {
 		},
 	}
 
-	runUserAgentTests(tests, isiOS, t)
+	u := &Util{}
+	runUserAgentTests(tests, u.isiOS, t)
 }
 
 func TestIsAtMinChromeVersion(t *testing.T) {
@@ -214,7 +158,8 @@ func TestIsAtMinChromeVersion(t *testing.T) {
 		},
 	}
 
-	runUserAgentTests(tests, isAtMinChromeVersion, t)
+	u := &Util{}
+	runUserAgentTests(tests, u.isAtMinChromeVersion, t)
 }
 
 func TestIsAtMinChromeIosVersion(t *testing.T) {
@@ -237,7 +182,8 @@ func TestIsAtMinChromeIosVersion(t *testing.T) {
 		},
 	}
 
-	runUserAgentTests(tests, isAtMinChromeIosVersion, t)
+	u := &Util{}
+	runUserAgentTests(tests, u.isAtMinChromeIosVersion, t)
 }
 
 func TestIsAtMinSafariVersion(t *testing.T) {
@@ -260,7 +206,8 @@ func TestIsAtMinSafariVersion(t *testing.T) {
 		},
 	}
 
-	runUserAgentTests(tests, isAtMinSafariVersion, t)
+	u := &Util{}
+	runUserAgentTests(tests, u.isAtMinSafariVersion, t)
 }
 
 func TestGdprApplies(t *testing.T) {
@@ -305,10 +252,11 @@ func TestGdprApplies(t *testing.T) {
 		},
 	}
 
+	u := &Util{}
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
 
-		output := gdprApplies(test.input)
+		output := u.gdprApplies(test.input)
 		if output != test.expected {
 			t.Errorf("Expected: %t, got %t\n", test.expected, output)
 		}
@@ -357,10 +305,11 @@ func TestGdprConsentString(t *testing.T) {
 		},
 	}
 
+	u := &Util{}
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
 
-		output := gdprConsentString(test.input)
+		output := u.gdprConsentString(test.input)
 		if output != test.expected {
 			t.Errorf("Expected: %s, got %s\n", test.expected, output)
 		}

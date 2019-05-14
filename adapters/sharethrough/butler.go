@@ -1,8 +1,6 @@
 package sharethrough
 
 import (
-	"fmt"
-	"github.com/buger/jsonparser"
 	"github.com/mxmCherry/openrtb"
 	"github.com/prebid/prebid-server/adapters"
 	"github.com/prebid/prebid-server/errortypes"
@@ -41,7 +39,8 @@ func butlerToOpenRTBResponse(btlrReq *adapters.RequestData, strResp openrtb_ext.
 		return nil, errs
 	}
 
-	adm, admErr := getAdMarkup(strResp, btlrParams)
+	util := &Util{}
+	adm, admErr := util.getAdMarkup(strResp, btlrParams)
 	if admErr != nil {
 		errs = append(errs, &errortypes.BadServerResponse{Message: admErr.Error()})
 	}
@@ -63,36 +62,6 @@ func butlerToOpenRTBResponse(btlrReq *adapters.RequestData, strResp openrtb_ext.
 	bidResponse.Bids = append(bidResponse.Bids, typedBid)
 
 	return bidResponse, errs
-}
-
-func (s SharethroughAdapter) generateHBUri(baseUrl string, params hbUriParams, app *openrtb.App) string {
-	v := url.Values{}
-	v.Set("placement_key", params.Pkey)
-	v.Set("bidId", params.BidID)
-	v.Set("consent_required", fmt.Sprintf("%t", params.ConsentRequired))
-	v.Set("consent_string", params.ConsentString)
-
-	v.Set("instant_play_capable", fmt.Sprintf("%t", params.InstantPlayCapable))
-	v.Set("stayInIframe", fmt.Sprintf("%t", params.Iframe))
-	v.Set("height", strconv.FormatUint(params.Height, 10))
-	v.Set("width", strconv.FormatUint(params.Width, 10))
-
-	var version string
-
-	if app != nil {
-		// Skipping error handling here because it should fall through to unknown in the flow
-		version, _ = jsonparser.GetString(app.Ext, "prebid", "version")
-	}
-
-	if len(version) == 0 {
-		version = "unknown"
-	}
-
-	v.Set("hbVersion", version)
-	v.Set("supplyId", supplyId)
-	v.Set("strVersion", strVersion)
-
-	return baseUrl + "?" + v.Encode()
 }
 
 func parseHBUri(uri string) (*hbUriParams, error) {

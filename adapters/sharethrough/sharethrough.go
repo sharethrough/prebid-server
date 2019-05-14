@@ -18,7 +18,8 @@ func NewSharethroughBidder(endpoint string) *SharethroughAdapter {
 }
 
 type SharethroughAdapter struct {
-	URI string
+	URI  string
+	util UtilIface
 }
 
 func (s SharethroughAdapter) Name() string {
@@ -46,20 +47,20 @@ func (s SharethroughAdapter) MakeRequests(request *openrtb.BidRequest) ([]*adapt
 		if len(extBtlrParams.Bidder.IframeSize) >= 2 {
 			height, width = uint64(extBtlrParams.Bidder.IframeSize[0]), uint64(extBtlrParams.Bidder.IframeSize[1])
 		} else {
-			height, width = getPlacementSize(imp.Banner.Format)
+			height, width = s.util.getPlacementSize(imp.Banner.Format)
 		}
 
 		potentialRequests = append(potentialRequests, &adapters.RequestData{
 			Method: "POST",
-			Uri: s.generateHBUri(s.URI, hbUriParams{
+			Uri: s.util.generateHBUri(s.URI, hbUriParams{
 				Pkey:               pKey,
 				BidID:              imp.ID,
-				ConsentRequired:    gdprApplies(request),
-				ConsentString:      gdprConsentString(request),
+				ConsentRequired:    s.util.gdprApplies(request),
+				ConsentString:      s.util.gdprConsentString(request),
 				Iframe:             extBtlrParams.Bidder.Iframe,
 				Height:             height,
 				Width:              width,
-				InstantPlayCapable: canAutoPlayVideo(request.Device.UA),
+				InstantPlayCapable: s.util.canAutoPlayVideo(request.Device.UA),
 			}, request.App),
 			Body:    nil,
 			Headers: headers,

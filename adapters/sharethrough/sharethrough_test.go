@@ -7,6 +7,35 @@ import (
 	"testing"
 )
 
+type MockUtil struct {
+	mockCanAutoPlayVideo  func() bool
+	mockGdprApplies       func() bool
+	mockGdprConsentString func() string
+	mockGenerateHBUri     func() string
+	mockGetPlacementSize  func() (uint64, uint64)
+	UtilIface
+}
+
+func (m MockUtil) canAutoPlayVideo(userAgent string) bool {
+	return m.mockCanAutoPlayVideo()
+}
+
+func (m MockUtil) gdprApplies(request *openrtb.BidRequest) bool {
+	return m.mockGdprApplies()
+}
+
+func (m MockUtil) gdprConsentString(bidRequest *openrtb.BidRequest) string {
+	return m.mockGdprConsentString()
+}
+
+func (m MockUtil) generateHBUri(baseUrl string, params hbUriParams, app *openrtb.App) string {
+	return m.mockGenerateHBUri()
+}
+
+func (m MockUtil) getPlacementSize(formats []openrtb.Format) (height uint64, width uint64) {
+	return m.mockGetPlacementSize()
+}
+
 func assertRequestDataEquals(t *testing.T, testName string, expected []*adapters.RequestData, actual []*adapters.RequestData) {
 	t.Logf("Test case: %s\n", testName)
 
@@ -64,10 +93,38 @@ func TestSuccessMakeRequests(t *testing.T) {
 		},
 	}
 
+	mockCanAutoPlayVideo := func() bool {
+		return true
+	}
+
+	mockGdprApplies := func() bool {
+		return false
+	}
+
+	mockGdprConsentString := func() string {
+		return ""
+	}
+
+	mockGenerateHBUri := func() string {
+		return "http://ppp.com"
+	}
+
+	mockGetPlacementSize := func() (height uint64, width uint64) {
+		return uint64(1), uint64(1)
+	}
+
+	mockUtil := &MockUtil{
+		mockCanAutoPlayVideo:  mockCanAutoPlayVideo,
+		mockGdprApplies:       mockGdprApplies,
+		mockGdprConsentString: mockGdprConsentString,
+		mockGenerateHBUri:     mockGenerateHBUri,
+		mockGetPlacementSize:  mockGetPlacementSize,
+	}
+
 	for testName, test := range tests {
 		t.Logf("Test case: %s\n", testName)
 
-		adapter := &SharethroughAdapter{URI: "http://abc.com", util: &Util{}}
+		adapter := &SharethroughAdapter{URI: "http://abc.com", util: mockUtil}
 		output, actualErrors := adapter.MakeRequests(test.input)
 
 		assertRequestDataEquals(t, testName, test.expected, output)
