@@ -286,7 +286,6 @@ func TestBuildUri(t *testing.T) {
 				"stayInIframe=false",
 				"height=20",
 				"width=30",
-				"hbVersion=unknown",
 				"supplyId=FGMrCMMc",
 				"strVersion=1.0.0",
 			},

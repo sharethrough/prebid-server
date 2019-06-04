@@ -148,7 +148,6 @@ func (h StrUriHelper) buildUri(params StrAdSeverParams) string {
 	v.Set("height", strconv.FormatUint(params.Height, 10))
 	v.Set("width", strconv.FormatUint(params.Width, 10))
 
-	v.Set("hbVersion", "unknown")
 	v.Set("supplyId", supplyId)
 	v.Set("strVersion", strVersion)
 
