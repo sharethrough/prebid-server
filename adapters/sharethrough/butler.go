@@ -54,6 +54,7 @@ func (s StrOpenRTBTranslator) requestFromOpenRTB(imp openrtb.Imp, request *openr
 	headers := http.Header{}
 	headers.Add("Content-Type", "text/plain;charset=utf-8")
 	headers.Add("Accept", "application/json")
+	headers.Add("Origin", request.Site.Domain)
 
 	var strImpExt adapters.ExtImpBidder
 	if err := json.Unmarshal(imp.Ext, &strImpExt); err != nil {

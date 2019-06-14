@@ -78,6 +78,9 @@ func TestSuccessRequestFromOpenRTB(t *testing.T) {
 				Device: &openrtb.Device{
 					UA: "Android Chome/60",
 				},
+				Site: &openrtb.Site{
+					Domain: "a.domain.com",
+				},
 			},
 			expected: &adapters.RequestData{
 				Method: "POST",
@@ -86,6 +89,7 @@ func TestSuccessRequestFromOpenRTB(t *testing.T) {
 				Headers: http.Header{
 					"Content-Type": []string{"text/plain;charset=utf-8"},
 					"Accept":       []string{"application/json"},
+					"Origin":       []string{"a.domain.com"},
 				},
 			},
 		},
