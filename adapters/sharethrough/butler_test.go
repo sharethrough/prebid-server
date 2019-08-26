@@ -304,7 +304,7 @@ func TestBuildUri(t *testing.T) {
 				"supplyId=FGMrCMMc",
 				"strVersion=" + strconv.FormatInt(strVersion, 10),
 				"ttduid=ttd123",
-				"stx_user_id=stx123",
+				"stxuid=stx123",
 			},
 		},
 	}

@@ -153,7 +153,7 @@ func (h StrUriHelper) buildUri(params StrAdSeverParams) string {
 		v.Set("ttduid", params.TheTradeDeskUserId)
 	}
 	if params.SharethroughUserId != "" {
-		v.Set("stx_user_id", params.SharethroughUserId)
+		v.Set("stxuid", params.SharethroughUserId)
 	}
 
 	v.Set("instant_play_capable", fmt.Sprintf("%t", params.InstantPlayCapable))
