@@ -1,0 +1,15 @@
+# Configuration for pull:bot to keep us in sync with prebid
+version: "1"
+# Array of rules to trigger the pull:bot
+rules:
+  # first rule keeps our master branch in sync with prebid's via hard reset
+  - base: master
+    upstream: prebid:master
+    mergeMethod: hardreset
+  # second rule keeps our staging branch in sync with prebid's master
+  - base: staging
+    upstream: prebid:master
+    # use rebase here so that we don't clobber the travis.yml we wrote to deploy to AWS
+    mergeMethod: rebase
+# Optional label to apply to any PR raised by pull:bot
+label: ":arrow_heading_down: pull"

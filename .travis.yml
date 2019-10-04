@@ -1,30 +1,43 @@
 language: go
 
 go:
-  - '1.12'
   - '1.13'
 
 go_import_path: github.com/prebid/prebid-server
 
 env:
-- GO111MODULE=on
+  global:
+    # AWS_ACCESS_KEY_ID
+    - secure: "K3foDpJLAJFFTFWrYVtqAHlJrkjDnk4aXlwTgzkWX15CElR9LoMTN4RDuOxO5PHJJ4inYUWIYaXtan37RUsB2YkeZRBwYScI6FO9leN9pSmFiFIjVG3nWNZTjVSyPNGPVcdbuo/YdCDeg3NIQqoo44VpxjpQ5mowtqjHqMg73I7kcvilPzFUUMl2L0xShriJXByN3PBuEP/9CXvmswfm/oShkwUh6dbHQO/IkzEjzCimtVWvcdfRPW8w83WV07OBN9HRXKl+iUl9DpD4B0rE8ALQ9/hJCZ1+RAQOqYeex19+GRpvpll2T/WyCzbUOJACfuIovk7MSVbeQZlrOQBKhFrPbEAD/S1Z/EtElgEJF3udg9McB6jxbDdZRKsn8oFrygEYfRj3oZuXnv2CM1lip/ul5Vvca+xfvgOUn8LVZVHAW5W9YKopNefx0Vbg05GOPdJTesgDsRgEjNq2UdCPuY/KZdCKGSHvhJzIUPbtz+8NoAPghYJixeTcRw3BVd+nxlHDA54z1d3KmyJbMO/Zd44eOlX8bGOLhYqp3s20/Fodn4SmeDgCtJY5sHgvPUDTc6jQ3jzsKELWKSgylko056/C4O6CoARvNIuSOlJvNf9JdP42CDOTssmSOgzsRIyOKT/jk5+I4eD5WGdpebpLrXunyas7PmRUWEfLIhF6xTk="
 
-script:
-  - "./validate.sh --nofmt --cov --race 10"
+    # AWS_SECRET_ACCESS_KEY
+    - secure: "Y1a9dj0AniY4ZIYJRQuWHRbbdAbrX6j2a/CmYjT4SAcCLDRNmMQudxpy/QYvkKbFmOcovpVxOJ/SxVx0Sfwlvhe9ofi7GYZd/BYAe51ZJJz9pmTa1QKRjCO6pO4v3SYDBNMUDyvIvwfhZuV8VjO4Khb1RhNWiDzBGHv9Q2u0fwToa1A53noivsQ946MfvrCdEJ5lILLujndeSfYbg4elwiXZnHXn+u8Fcm+rFamEB6TFqyz/clF264CgsOdCjSSQTsEtm2kKEzQ3wwWV4gKxwAH0f+K4gLOqopk/JDyqXex8qe/SiH9Qy9u61ZByBtYhb1tOk00XeCARs66uker1TmGf1ZNICDEqxFf2LX/E7NuIGOBUebSSGtGdF+gr1YXV4Ghc4KzDKkg/qXgnu2zulnANdUyqFi7+4pe/9zK6uAPrPOFGWflDfDY7StFB9pE9fGWyElc9pk2Q8OJdqXs/BqZR6DQaajab5WEqrqhX1ToG9HWuyYr+KyZDV2BblHWJ/d82NSAReOCraS7RTmTNF3/lRz+MZ6Zs4lv6S6txCiazkMMuMkLX+d3j1SkrZxscXUuy0CUy6B1HXvoF1f6tiPyb34JSQCOnSPfO9zIfRGgioJv9CJZkDPm8DT9dZDmrPqbAZSGoFj8qscj6/LUovukEkoT7TV8z1G6b7zfXbD0="
 
+    - DEP_VERSION="0.5.0"
+    - GO111MODULE=on
+
+before_install:
+  - curl -L -s https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 -o $GOPATH/bin/dep
+  - chmod +x $GOPATH/bin/dep
+
+install:
+  - $GOPATH/bin/dep ensure
+
+# build package and create executable file bin/application
+# see AWS docs for more info: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/go-environment.html
 before_deploy:
-  - go get github.com/mitchellh/gox
-  - gox -os="linux" -arch="386" -output="{{.Dir}}_{{.OS}}_{{.Arch}}" -ldflags "-X main.Rev=`git rev-parse --short HEAD`" -verbose ./...;
+  - "mkdir bin && go build -o bin/application ."
+  - "mkdir dist && zip -r dist/pbs.zip ."
 
 deploy:
-  provider: releases
   skip_cleanup: true
-  api_key:
-    secure: TSJcbIpg2zTJuzUXwv0Un5DPztDTeIKQ2BuuO9KiWYY3Td/nKn0flTYE6B5O6iVqE96HKyj2j0W51rhnRTNDReRZv76L+YXLTJOTQEEQY/A+7XaUXRT0KIbr1EHaeU+4uPJe/8YXxq+nFNeqOjj+LY457WbvnQTIbraAmCgi4yNq4JR+J9BoCELkX0SnU7oq+brq9tJNL3V+7EHIVH6ZLa1lWOrapMnbrVils8gwzWR8XpbdaI+Sn30AGOFKZ0WE2ojZkZb8oZxyX0HKarIiykfZUUzRhlXlTJ0D81QOdc5AtPNR/2dqUXsUE8mRav9R3AJM2BCS2pnP29orCRQU/kxS/mRfx2oZhkr+OHPsNbJcGNSbqNKlM13bX2nL1ZJsJ6xL0VrkBFYlI01SWR12CT9DhZSqTmGPNEkt3fdzwuYtkJNfthb9e9obscnmJEHPSiZRv9dv/stP5LVJJHfFdrzM4+Qo3MCxLNOhmc+p93gsZPeuDGDlx8Tqv1KpN7sp0glbmOwyFAwbCVh5can/JPIAKsQi9VRyZAJvn+7sqqZCExN4TvFArq7pe0LjIVHUQZP9g/vS8HobQnPutmGxf8HqzVVEBnjMsXuiY4cVRecXVRM7crfJjLGr2e9ywIkUZMSD+bRkbRUZ0QQQPvWtcgRw5JmLKG9jDklj8BDkON8=
-  file:
-    - prebid-server_linux_386
+  provider: elasticbeanstalk
+  region: us-east-1
+  app: prebid-server
+  env: staging
+  zip_file: dist/pbs.zip
+  bucket_name: pge-builds
+  bucket_path: prebid-server
   on:
-    repo: prebid/prebid-server
-    tags: true
-    branch:
-      - master
+    repo: sharethrough/prebid-server
+    branch: staging
