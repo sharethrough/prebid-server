@@ -108,6 +108,27 @@ func TestMultiMetricsEngine(t *testing.T) {
 	for _, label := range labelsBlacklist {
 		metricsEngine.RecordRequest(label)
 	}
+	labelsBlacklist := []pbsmetrics.Labels{
+		{
+			Source:        pbsmetrics.DemandWeb,
+			RType:         pbsmetrics.ReqTypeAMP,
+			PubID:         "test2",
+			Browser:       pbsmetrics.BrowserOther,
+			CookieFlag:    pbsmetrics.CookieFlagYes,
+			RequestStatus: pbsmetrics.RequestStatusBlacklisted,
+		},
+		{
+			Source:        pbsmetrics.DemandWeb,
+			RType:         pbsmetrics.ReqTypeVideo,
+			PubID:         "test2",
+			Browser:       pbsmetrics.BrowserOther,
+			CookieFlag:    pbsmetrics.CookieFlagYes,
+			RequestStatus: pbsmetrics.RequestStatusBlacklisted,
+		},
+	}
+	for _, label := range labelsBlacklist {
+		metricsEngine.RecordRequest(label)
+	}
 	impTypeLabels.BannerImps = false
 	impTypeLabels.VideoImps = true
 	impTypeLabels.AudioImps = false
