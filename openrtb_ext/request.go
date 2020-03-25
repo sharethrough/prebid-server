@@ -17,6 +17,7 @@ type ExtRequestPrebid struct {
 	Cache                *ExtRequestPrebidCache `json:"cache,omitempty"`
 	StoredRequest        *ExtStoredRequest      `json:"storedrequest,omitempty"`
 	Targeting            *ExtRequestTargeting   `json:"targeting,omitempty"`
+	SupportDeals         bool                   `json:"supportdeals,omitempty"`
 }
 
 // ExtRequestPrebidCache defines the contract for bidrequest.ext.prebid.cache
@@ -57,9 +58,10 @@ type ExtRequestTargeting struct {
 }
 
 type ExtIncludeBrandCategory struct {
-	PrimaryAdServer int    `json:"primaryadserver"`
-	Publisher       string `json:"publisher"`
-	WithCategory    bool   `json:"withcategory"`
+	PrimaryAdServer     int    `json:"primaryadserver"`
+	Publisher           string `json:"publisher"`
+	WithCategory        bool   `json:"withcategory"`
+	TranslateCategories *bool  `json:"translatecategories,omitempty"`
 }
 
 // Make an unmarshaller that will set a default PriceGranularity
