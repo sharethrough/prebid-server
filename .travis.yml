@@ -22,7 +22,6 @@ before_deploy:
   - "mkdir dist && zip -r dist/pbs.zip ."
 
 deploy:
-  script: skip
   provider: elasticbeanstalk
   region: us-east-1
   app: prebid-server
