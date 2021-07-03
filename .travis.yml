@@ -1,0 +1,41 @@
+language: go
+
+go:
+  - '1.16'
+
+go_import_path: github.com/prebid/prebid-server
+
+env:
+  global:
+    # AWS_ACCESS_KEY_ID
+    - secure: "K3foDpJLAJFFTFWrYVtqAHlJrkjDnk4aXlwTgzkWX15CElR9LoMTN4RDuOxO5PHJJ4inYUWIYaXtan37RUsB2YkeZRBwYScI6FO9leN9pSmFiFIjVG3nWNZTjVSyPNGPVcdbuo/YdCDeg3NIQqoo44VpxjpQ5mowtqjHqMg73I7kcvilPzFUUMl2L0xShriJXByN3PBuEP/9CXvmswfm/oShkwUh6dbHQO/IkzEjzCimtVWvcdfRPW8w83WV07OBN9HRXKl+iUl9DpD4B0rE8ALQ9/hJCZ1+RAQOqYeex19+GRpvpll2T/WyCzbUOJACfuIovk7MSVbeQZlrOQBKhFrPbEAD/S1Z/EtElgEJF3udg9McB6jxbDdZRKsn8oFrygEYfRj3oZuXnv2CM1lip/ul5Vvca+xfvgOUn8LVZVHAW5W9YKopNefx0Vbg05GOPdJTesgDsRgEjNq2UdCPuY/KZdCKGSHvhJzIUPbtz+8NoAPghYJixeTcRw3BVd+nxlHDA54z1d3KmyJbMO/Zd44eOlX8bGOLhYqp3s20/Fodn4SmeDgCtJY5sHgvPUDTc6jQ3jzsKELWKSgylko056/C4O6CoARvNIuSOlJvNf9JdP42CDOTssmSOgzsRIyOKT/jk5+I4eD5WGdpebpLrXunyas7PmRUWEfLIhF6xTk="
+
+    # AWS_SECRET_ACCESS_KEY
+    - secure: "Y1a9dj0AniY4ZIYJRQuWHRbbdAbrX6j2a/CmYjT4SAcCLDRNmMQudxpy/QYvkKbFmOcovpVxOJ/SxVx0Sfwlvhe9ofi7GYZd/BYAe51ZJJz9pmTa1QKRjCO6pO4v3SYDBNMUDyvIvwfhZuV8VjO4Khb1RhNWiDzBGHv9Q2u0fwToa1A53noivsQ946MfvrCdEJ5lILLujndeSfYbg4elwiXZnHXn+u8Fcm+rFamEB6TFqyz/clF264CgsOdCjSSQTsEtm2kKEzQ3wwWV4gKxwAH0f+K4gLOqopk/JDyqXex8qe/SiH9Qy9u61ZByBtYhb1tOk00XeCARs66uker1TmGf1ZNICDEqxFf2LX/E7NuIGOBUebSSGtGdF+gr1YXV4Ghc4KzDKkg/qXgnu2zulnANdUyqFi7+4pe/9zK6uAPrPOFGWflDfDY7StFB9pE9fGWyElc9pk2Q8OJdqXs/BqZR6DQaajab5WEqrqhX1ToG9HWuyYr+KyZDV2BblHWJ/d82NSAReOCraS7RTmTNF3/lRz+MZ6Zs4lv6S6txCiazkMMuMkLX+d3j1SkrZxscXUuy0CUy6B1HXvoF1f6tiPyb34JSQCOnSPfO9zIfRGgioJv9CJZkDPm8DT9dZDmrPqbAZSGoFj8qscj6/LUovukEkoT7TV8z1G6b7zfXbD0="
+
+    - GO111MODULE=on
+
+install:
+  - make deps
+
+# build package and create executable file bin/application
+# see AWS docs for more info: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/go-environment.html
+before_deploy:
+  - "mkdir bin && go build -mod=vendor -o bin/application ."
+  - "mkdir dist && zip -r dist/pbs.zip ."
+
+deploy:
+  provider: elasticbeanstalk
+  region: us-east-1
+  app: prebid-server
+  env: prebid-server-staging-green
+  bucket_name: pge-builds
+  bucket_path: prebid-server
+  zip_file: dist/pbs.zip
+  skip_cleanup: true
+  wait_until_deployed: true
+  wait_until_deployed_timeout: 1800
+  edge: true
+  on:
+    repo: sharethrough/prebid-server
+    branch: staging-test
