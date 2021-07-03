@@ -15,9 +15,6 @@ env:
 
     - GO111MODULE=on
 
-install:
-  - make deps
-
 # build package and create executable file bin/application
 # see AWS docs for more info: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/go-environment.html
 before_deploy:
