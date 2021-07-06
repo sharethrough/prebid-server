@@ -33,4 +33,4 @@ deploy:
   edge: true
   on:
     repo: sharethrough/prebid-server
-    branch: ep/staging-test
+    branch: staging
