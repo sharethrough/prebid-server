@@ -98,7 +98,10 @@ func (s StrOpenRTBTranslator) requestFromOpenRTB(imp openrtb2.Imp, request *open
 		return nil, err
 	}
 
-	gpid := strImpParams.Data.PBAdSlot
+	var gpid string
+	if strImpParams.Data != nil && strImpParams.Data.PBAdSlot != "" {
+		gpid = strImpParams.Data.PBAdSlot
+	}
 
 	usPolicySignal := ""
 	if usPolicy, err := ccpa.ReadFromRequest(request); err == nil {
