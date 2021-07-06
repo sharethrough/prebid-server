@@ -21,6 +21,7 @@ const defaultTmax = 10000 // 10 sec
 type StrAdSeverParams struct {
 	Pkey               string
 	BidID              string
+	GPID               string
 	ConsentRequired    bool
 	ConsentString      string
 	USPrivacySignal    string
@@ -97,6 +98,8 @@ func (s StrOpenRTBTranslator) requestFromOpenRTB(imp openrtb2.Imp, request *open
 		return nil, err
 	}
 
+	gpid := strImpParams.Data.PBAdSlot
+
 	usPolicySignal := ""
 	if usPolicy, err := ccpa.ReadFromRequest(request); err == nil {
 		usPolicySignal = usPolicy.Consent
@@ -107,6 +110,7 @@ func (s StrOpenRTBTranslator) requestFromOpenRTB(imp openrtb2.Imp, request *open
 		Uri: s.UriHelper.buildUri(StrAdSeverParams{
 			Pkey:               pKey,
 			BidID:              imp.ID,
+			GPID:               gpid,
 			ConsentRequired:    s.Util.gdprApplies(request),
 			ConsentString:      userInfo.Consent,
 			USPrivacySignal:    usPolicySignal,
@@ -191,6 +195,9 @@ func (h StrUriHelper) buildUri(params StrAdSeverParams) string {
 	v := url.Values{}
 	v.Set("placement_key", params.Pkey)
 	v.Set("bidId", params.BidID)
+	if params.GPID != "" {
+		v.Set("gpid", params.GPID)
+	}
 	v.Set("consent_required", fmt.Sprintf("%t", params.ConsentRequired))
 	v.Set("consent_string", params.ConsentString)
 	if params.USPrivacySignal != "" {

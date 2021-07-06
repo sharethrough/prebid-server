@@ -435,6 +435,7 @@ func TestBuildUri(t *testing.T) {
 			inputParams: StrAdSeverParams{
 				Pkey:               "pkey",
 				BidID:              "bid",
+				GPID:               "gpid",
 				ConsentRequired:    true,
 				ConsentString:      "consent",
 				USPrivacySignal:    "ccpa",
@@ -449,6 +450,7 @@ func TestBuildUri(t *testing.T) {
 				"http://abc.com?",
 				"placement_key=pkey",
 				"bidId=bid",
+				"gpid=gpid",
 				"consent_required=true",
 				"consent_string=consent",
 				"us_privacy=ccpa",
