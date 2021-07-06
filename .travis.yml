@@ -13,8 +13,6 @@ env:
     # AWS_SECRET_ACCESS_KEY
     - secure: "Y1a9dj0AniY4ZIYJRQuWHRbbdAbrX6j2a/CmYjT4SAcCLDRNmMQudxpy/QYvkKbFmOcovpVxOJ/SxVx0Sfwlvhe9ofi7GYZd/BYAe51ZJJz9pmTa1QKRjCO6pO4v3SYDBNMUDyvIvwfhZuV8VjO4Khb1RhNWiDzBGHv9Q2u0fwToa1A53noivsQ946MfvrCdEJ5lILLujndeSfYbg4elwiXZnHXn+u8Fcm+rFamEB6TFqyz/clF264CgsOdCjSSQTsEtm2kKEzQ3wwWV4gKxwAH0f+K4gLOqopk/JDyqXex8qe/SiH9Qy9u61ZByBtYhb1tOk00XeCARs66uker1TmGf1ZNICDEqxFf2LX/E7NuIGOBUebSSGtGdF+gr1YXV4Ghc4KzDKkg/qXgnu2zulnANdUyqFi7+4pe/9zK6uAPrPOFGWflDfDY7StFB9pE9fGWyElc9pk2Q8OJdqXs/BqZR6DQaajab5WEqrqhX1ToG9HWuyYr+KyZDV2BblHWJ/d82NSAReOCraS7RTmTNF3/lRz+MZ6Zs4lv6S6txCiazkMMuMkLX+d3j1SkrZxscXUuy0CUy6B1HXvoF1f6tiPyb34JSQCOnSPfO9zIfRGgioJv9CJZkDPm8DT9dZDmrPqbAZSGoFj8qscj6/LUovukEkoT7TV8z1G6b7zfXbD0="
 
-    - GO111MODULE=on
-
 # build package and create executable file bin/application
 # see AWS docs for more info: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/go-environment.html
 before_deploy:
